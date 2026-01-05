@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic User Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .header h1 {
+            background: linear-gradient(90deg, #00d4ff, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #64c3ff;
+        }
+
+        .live-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: #00ff88;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(30, 50, 80, 0.8);
+            border: 2px solid rgba(100, 200, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(100, 200, 255, 0.6);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 150, 255, 0.2);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-label {
+            color: #999;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #00d4ff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(100, 100, 150, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #0099ff);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(100, 200, 255, 0.2);
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+        }
+
+        .tab-btn:hover {
+            color: #64c3ff;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .logs-container {
+            background: rgba(30, 50, 80, 0.8);
+            border: 2px solid rgba(100, 200, 255, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            max-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logs-header {
+            padding: 1rem;
+            border-bottom: 2px solid rgba(100, 200, 255, 0.2);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            background: rgba(20, 40, 70, 0.8);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.6rem 1rem;
+            background: rgba(50, 70, 100, 0.8);
+            border: 2px solid rgba(100, 200, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .search-box::placeholder {
+            color: #666;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1rem;
+            background: rgba(50, 70, 100, 0.8);
+            border: 2px solid rgba(100, 200, 255, 0.2);
+            border-radius: 8px;
+            color: #999;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: rgba(0, 150, 255, 0.4);
+            border-color: rgba(0, 150, 255, 0.8);
+            color: #00d4ff;
+        }
+
+        .logs-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .log-entry {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+            display: flex;
+            gap: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .log-entry:hover {
+            background: rgba(100, 200, 255, 0.1);
+        }
+
+        .log-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-width: 70px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .log-badge.error {
+            background: rgba(255, 80, 80, 0.3);
+            color: #ff5050;
+            border: 1px solid rgba(255, 80, 80, 0.5);
+        }
+
+        .log-badge.warning {
+            background: rgba(255, 200, 0, 0.3);
+            color: #ffc800;
+            border: 1px solid rgba(255, 200, 0, 0.5);
+        }
+
+        .log-badge.info {
+            background: rgba(0, 200, 255, 0.3);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 200, 255, 0.5);
+        }
+
+        .log-badge.debug {
+            background: rgba(150, 150, 200, 0.3);
+            color: #9696c8;
+            border: 1px solid rgba(150, 150, 200, 0.5);
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-message {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .log-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .log-expanded {
+            background: rgba(100, 200, 255, 0.05);
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            border-left: 3px solid #00d4ff;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .code-issues {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .issue-card {
+            background: rgba(30, 50, 80, 0.8);
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .issue-card.error {
+            border-color: rgba(255, 80, 80, 0.5);
+        }
+
+        .issue-card.warning {
+            border-color: rgba(255, 200, 0, 0.5);
+        }
+
+        .issue-card.info {
+            border-color: rgba(0, 200, 255, 0.5);
+        }
+
+        .issue-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .issue-file {
+            font-size: 0.9rem;
+            color: #64c3ff;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(50, 70, 100, 0.8);
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .status-item:hover {
+            background: rgba(50, 70, 100, 1);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: #00ff88;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-right: 0.5rem;
+        }
+
+        .status-name {
+            font-weight: 600;
+        }
+
+        .status-value {
+            color: #00d4ff;
+            font-size: 0.9rem;
+        }
+
+        .performance-metric {
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-header-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .metric-header-row .value {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .progress-bar-large {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(100, 100, 150, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill-large {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #0099ff);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>System Dashboard</h1>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 0.3rem;">Real-time monitoring & log visualization</p>
+            </div>
+            <div class="header-info">
+                <div class="live-indicator"></div>
+                <span>Live</span>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-label">CPU Usage</span>
+                    <span class="metric-icon">⚙️</span>
+                </div>
+                <div class="metric-value" id="cpuValue">45%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cpuFill" style="width: 45%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-label">Memory</span>
+                    <span class="metric-icon">💾</span>
+                </div>
+                <div class="metric-value" id="memoryValue">62%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memoryFill" style="width: 62%"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-label">Requests</span>
+                    <span class="metric-icon">📊</span>
+                </div>
+                <div class="metric-value" id="requestsValue">1,240</div>
+                <p style="font-size: 0.85rem; color: #00ff88; margin-top: 0.5rem;">↑ +45 this hour</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-label">Errors</span>
+                    <span class="metric-icon">⚠️</span>
+                </div>
+                <div class="metric-value" id="errorsValue">8</div>
+                <p style="font-size: 0.85rem; color: #ff5050; margin-top: 0.5rem;">Active incidents</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab('logs')">Logs</button>
+            <button class="tab-btn" onclick="switchTab('code')">Code Issues</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="overview-grid">
+                <div>
+                    <h2 style="margin-bottom: 1.5rem; font-size: 1.3rem;">System Status</h2>
+                    <div id="statusContainer">
+                        <div class="empty-state">Loading system status...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 style="margin-bottom: 1.5rem; font-size: 1.3rem;">Performance Metrics</h2>
+                    <div class="performance-metric">
+                        <div class="metric-header-row">
+                            <span>Avg Response Time</span>
+                            <span class="value">128ms</span>
+                        </div>
+                        <div class="progress-bar-large">
+                            <div class="progress-fill-large" style="width: 45%"></div>
+                        </div>
+                    </div>
+
+                    <div class="performance-metric">
+                        <div class="metric-header-row">
+                            <span>Success Rate</span>
+                            <span class="value">98.7%</span>
+                        </div>
+                        <div class="progress-bar-large">
+                            <div class="progress-fill-large" style="width: 98.7%"></div>
+                        </div>
+                    </div>
+
+                    <div class="performance-metric">
+                        <div class="metric-header-row">
+                            <span>Uptime Today</span>
+                            <span class="value">99.9%</span>
+                        </div>
+                        <div class="progress-bar-large">
+                            <div class="progress-fill-large" style="width: 99.9%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div id="logs" class="tab-content">
+            <div class="logs-container">
+                <div class="logs-header">
+                    <input type="text" id="searchInput" class="search-box" placeholder="Search logs...">
+                    <button class="filter-btn active" onclick="filterLogs('all')">All</button>
+                    <button class="filter-btn" onclick="filterLogs('error')">Error</button>
+                    <button class="filter-btn" onclick="filterLogs('warning')">Warning</button>
+                    <button class="filter-btn" onclick="filterLogs('info')">Info</button>
+                </div>
+                <div class="logs-list" id="logsList">
+                    <div class="empty-state">Loading logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Issues Tab -->
+        <div id="code" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.3rem;">Code Issues & Performance</h2>
+            <div class="code-issues" id="codeIssues">
+                <div class="empty-state">Loading code issues...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let state = {
+            allLogs: [],
+            currentFilter: 'all',
+            currentSearch: '',
+            metrics: { cpu: 45, memory: 62, requests: 1240, errors: 8 }
+        };
+
+        // API base URL
+        const API_URL = 'http://localhost:3000/api';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDashboard();
+        });
+
+        async function initializeDashboard() {
+            await fetchMetrics();
+            await fetchLogs();
+            await fetchCodeIssues();
+            await fetchSystemStatus();
+            
+            // Update metrics every 3 seconds
+            setInterval(fetchMetrics, 3000);
+            // Update logs every 2 seconds
+            setInterval(fetchLogs, 2000);
+            // Update system status every 5 seconds
+            setInterval(fetchSystemStatus, 5000);
+
+            // Search and filter listeners
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                state.currentSearch = e.target.value;
+                renderLogs();
+            });
+        }
+
+        async function fetchMetrics() {
+            try {
+                const response = await fetch(`${API_URL}/metrics`);
+                const data = await response.json();
+                state.metrics = data;
+                updateMetricsUI();
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                // Fallback: simulate data
+                simulateMetrics();
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch(`${API_URL}/logs?limit=30`);
+                const data = await response.json();
+                state.allLogs = data;
+                renderLogs();
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                generateMockLogs();
+            }
+        }
+
+        async function fetchCodeIssues() {
+            try {
+                const response = await fetch(`${API_URL}/code-issues`);
+                const issues = await response.json();
+                renderCodeIssues(issues);
+            } catch (error) {
+                console.error('Error fetching code issues:', error);
+                renderMockCodeIssues();
+            }
+        }
+
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch(`${API_URL}/system-status`);
+                const status = await response.json();
+                renderSystemStatus(status);
+            } catch (error) {
+                console.error('Error fetching system status:', error);
+                renderMockSystemStatus();
+            }
+        }
+
+        function updateMetricsUI() {
+            document.getElementById('cpuValue').textContent = state.metrics.cpu.toFixed(1) + '%';
+            document.getElementById('cpuFill').style.width = state.metrics.cpu + '%';
+
+            document.getElementById('memoryValue').textContent = state.metrics.memory.toFixed(1) + '%';
+            document.getElementById('memoryFill').style.width = state.metrics.memory + '%';
+
+            document.getElementById('requestsValue').textContent = state.metrics.requests.toLocaleString();
+            document.getElementById('errorsValue').textContent = state.metrics.errors;
+        }
+
+        function renderLogs() {
+            let filtered = state.allLogs;
+
+            if (state.currentFilter !== 'all') {
+                filtered = filtered.filter(log => log.level === state.currentFilter);
+            }
+
+            if (state.currentSearch) {
+                filtered = filtered.filter(log =>
+                    log.message.toLowerCase().includes(state.currentSearch.toLowerCase()) ||
+                    log.source.toLowerCase().includes(state.currentSearch.toLowerCase())
+                );
+            }
+
+            const logsList = document.getElementById('logsList');
+            logsList.innerHTML = filtered.length === 0 ? '<div class="empty-state">No logs found</div>' : '';
+
+            filtered.forEach(log => {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `
+                    <span class="log-badge ${log.level}">${log.level.toUpperCase()}</span>
+                    <div class="log-content">
+                        <div class="log-message">${log.message}</div>
+                        <div class="log-meta">
+                            <span>${log.timestamp}</span>
+                            <span style="color: #00d4ff;">${log.source}</span>
+                            <span style="color: #00ffff;">${log.responseTime}ms</span>
+                        </div>
+                        <div class="log-expanded" style="display: none;">
+                            <p>Thread: worker-${Math.floor(Math.random() * 8)}</p>
+                            <p>Full context: ${log.source} → ${log.message}</p>
+                        </div>
+                    </div>
+                `;
+
+                logEntry.addEventListener('click', () => {
+                    const expanded = logEntry.querySelector('.log-expanded');
+                    expanded.style.display = expanded.style.display === 'none' ? 'block' : 'none';
+                });
+
+                logsList.appendChild(logEntry);
+            });
+        }
+
+        function renderCodeIssues(issues) {
+            const container = document.getElementById('codeIssues');
+            container.innerHTML = '';
+
+            issues.forEach(issue => {
+                const card = document.createElement('div');
+                card.className = `issue-card ${issue.severity}`;
+                card.innerHTML = `
+                    <div class="issue-title">${issue.title}</div>
+                    <div class="issue-file">${issue.file}:${issue.line}</div>
+                    <p style="font-size: 0.9rem; color: #ccc;">${issue.description}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderSystemStatus(status) {
+            const container = document.getElementById('statusContainer');
+            container.innerHTML = '';
+
+            status.forEach(item => {
+                const statusItem = document.createElement('div');
+                statusItem.className = 'status-item';
+                statusItem.innerHTML = `
+                    <div style="flex: 1;">
+                        <div class="status-name">${item.service}</div>
+                        <div style="font-size: 0.85rem; color: #666;">Uptime: ${item.uptime}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="status-indicator"></div>
+                        <span class="status-value">${item.status}</span>
+                    </div>
+                `;
+                container.appendChild(statusItem);
+            });
+        }
+
+        function filterLogs(level) {
+            state.currentFilter = level;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderLogs();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Mock data generators for fallback
+        function generateMockLogs() {
+            const levels = ['info', 'warning', 'error', 'debug'];
+            const messages = [
+                'Database connection established',
+                'API request processed: /api/users',
+                'Cache invalidation triggered',
+                'Authentication token validated',
+                'Memory threshold warning',
+                'Failed to resolve dependency',
+                'Network timeout detected'
+            ];
+
+            state.allLogs = Array.from({ length: 20 }, (_, i) => ({
+                id: i.toString(),
+                timestamp: new Date(Date.now() - i * 5000).toLocaleTimeString(),
+                level: levels[Math.floor(Math.random() * levels.length)],
+                message: messages[Math.floor(Math.random() * messages.length)],
+                source: `module-${Math.floor(Math.random() * 5) + 1}.js`,
+                responseTime: Math.floor(Math.random() * 500) + 50
+            }));
+            renderLogs();
+        }
+
+        function simulateMetrics() {
+            state.metrics.cpu = Math.max(20, Math.min(90, state.metrics.cpu + (Math.random() - 0.5) * 10));
+            state.metrics.memory = Math.max(30, Math.min(95, state.metrics.memory + (Math.random() - 0.5) * 8));
+            state.metrics.requests += Math.floor(Math.random() * 50) + 10;
+            state.metrics.errors = Math.max(0, state.metrics.errors + Math.floor(Math.random() * 3) - 1);
+            updateMetricsUI();
+        }
+
+        function renderMockCodeIssues() {
+            renderCodeIssues([
+                { title: 'N+1 query detected', file: 'api/handlers.js', line: 124, severity: 'error', description: 'Optimize database queries for better performance' },
+                { title: 'Memory leak in event listener', file: 'utils/cache.js', line: 87, severity: 'warning', description: 'Event listener not properly cleaned up' },
+                { title: 'Unhandled promise rejection', file: 'services/auth.js', line: 203, severity: 'warning', description: 'Add .catch() to promise chain' },
+                { title: 'Performance: 450ms response time', file: 'middleware/logger.js', line: 56, severity: 'info', description: 'Consider optimizing this middleware' }
+            ]);
+        }
+
+        function renderMockSystemStatus() {
+            renderSystemStatus([
+                { service: 'API Server', status: 'online', uptime: '99.9%' },
+                { service: 'Database', status: 'online', uptime: '99.8%' },
+                { service: 'Cache Layer', status: 'online', uptime: '100%' },
+                { service: 'Message Queue', status: 'online', uptime: '99.5%' }
+            ]);
+        }
+    </script>
+</body>
+</html>
