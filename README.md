@@ -93,7 +93,7 @@ A modern, real-time system monitoring and log visualization dashboard built with
 dynamic-dashboard/
 │
 ├── server.js                 # Node.js Express backend server
-├── dashboard.html            # Frontend HTML/CSS/JavaScript
+├── index.html            # Frontend HTML/CSS/JavaScript
 ├── package.json              # Dependencies and scripts
 ├── dashboard.db              # SQLite database (auto-generated)
 ├── README.md                 # Project documentation (this file)
